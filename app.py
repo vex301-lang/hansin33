@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-한신 초등 이야기 메이커 (OpenAI 전용, 자동 표시 최종 버전)
+한신 초등 이야기 메이커 (OpenAI 전용, 버튼 아래 즉시 표시 버전)
 """
 import os
 import re
@@ -82,18 +82,13 @@ if st.button("주인공 만들기 👤✨", use_container_width=True):
             "부드럽고 따뜻한 말투로 써 주세요."
         )
         try:
-            resp = client.responses.create(
-                model="gpt-4o-mini",
-                input=prompt,
-                max_output_tokens=400,
-            )
+            resp = client.responses.create(model="gpt-4o-mini", input=prompt, max_output_tokens=400)
             desc = getattr(resp, "output_text", "").strip() or (
                 resp.output[0].content[0].text.strip() if getattr(resp, "output", None) else ""
             )
             if desc:
                 st.session_state["character_desc"] = desc
                 st.success("💫 주인공이 완성되었어요!")
-                st.rerun()
             else:
                 st.warning("응답은 성공했지만 내용이 비어 있어요. 잠시 후 다시 시도해 주세요.")
         except Exception as e:
@@ -129,7 +124,7 @@ if st.session_state["character_desc"]:
             [st.session_state[f"story_{j}"] for j in range(idx) if st.session_state[f"story_{j}"]]
         ).strip()
 
-    # 자동 생성 함수 (수정된 버전: 생성 후 바로 표시)
+    # 자동 생성 함수 (버튼 아래 즉시 표시)
     def generate_auto(title_prefix, idx):
         character = st.session_state["character_desc"]
         prev_all = build_prev_context(idx)
@@ -142,7 +137,8 @@ if st.session_state["character_desc"]:
         )
 
         try:
-            resp = client.responses.create(model="gpt-4o-mini", input=prompt, max_output_tokens=600)
+            with st.spinner("이야기를 만드는 중이에요..."):
+                resp = client.responses.create(model="gpt-4o-mini", input=prompt, max_output_tokens=600)
             text = getattr(resp, "output_text", "").strip() or (
                 resp.output[0].content[0].text.strip() if getattr(resp, "output", None) else ""
             )
@@ -152,8 +148,6 @@ if st.session_state["character_desc"]:
             if not text.startswith(title_prefix):
                 text = f"{title_prefix} " + text
             st.session_state[f"story_{idx}"] = text
-            st.success(f"✨ '{title_prefix}' 이야기 자동 생성 완료!")
-            st.rerun()  # ✅ 새로고침으로 바로 표시
         except Exception as e:
             st.error(f"자동 생성 중 오류 발생: {e}")
 
@@ -162,15 +156,12 @@ if st.session_state["character_desc"]:
         st.markdown(f"#### {title}")
         is_auto = i in [0, 2, 4]  # 1,3,5번째 칸 자동
         if is_auto:
-            st.text_area(
-                f"{title} (자동 생성 결과)",
-                value=st.session_state[f"story_{i}"],
-                height=120,
-                disabled=True,
-                key=f"auto_output_{i}",
-            )
             if st.button(f"{title} 자동 생성 🪄", use_container_width=True, key=f"auto_btn_{i}"):
                 generate_auto(title, i)
+            # 버튼 아래 즉시 결과 표시
+            if st.session_state[f"story_{i}"]:
+                st.markdown(f"🪄 **{title} 이야기**")
+                st.write(st.session_state[f"story_{i}"])
         else:
             st.session_state[f"story_{i}"] = st.text_area(
                 f"{title} 내용을 적어보세요",
