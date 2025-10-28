@@ -5,6 +5,7 @@
 - 각 칸은 3~5문장 제한
 - 다음 접속사를 고려하여 자연스럽게 이어짐
 - '옛날에' 단락은 고전적 서두(OO이 살았어요) 형태로 시작
+- 아이 입력 칸에는 '완성' 및 '수정하기' 버튼 추가
 """
 import os
 import re
@@ -52,6 +53,7 @@ BANNED_PATTERNS = [
 ]
 BAN_RE = re.compile("|".join(BANNED_PATTERNS), re.IGNORECASE)
 
+
 def words_valid(words):
     for w in words:
         if not w:
@@ -59,6 +61,7 @@ def words_valid(words):
         if BAN_RE.search(w):
             return False, "적절하지 않은 단어입니다. 다시 입력해 주세요."
     return True, "OK"
+
 
 # ---------------------------------------
 # 주인공 만들기
@@ -106,6 +109,7 @@ st.subheader("2️⃣ AI와 함께 번갈아 이야기를 써요 ✍️")
 
 for i in range(8):
     st.session_state.setdefault(f"story_{i}", "")
+    st.session_state.setdefault(f"locked_{i}", False)
 
 def build_prev_context(idx):
     """이전 칸까지의 이야기 연결"""
@@ -170,19 +174,35 @@ def generate_step_story(title, idx):
 for i, title in enumerate(TITLES):
     st.markdown(f"#### {title}")
 
-    if i in [0, 2, 4]:  # AI가 생성하는 칸
+    if i in [0, 2, 4]:  # AI 생성 칸
         if st.button(f"{title} 자동 생성 🪄", key=f"btn_{i}", use_container_width=True):
             generate_step_story(title, i)
         if st.session_state[f"story_{i}"]:
             st.markdown(f"🪄 **{title} 장면**")
             st.write(st.session_state[f"story_{i}"])
-    else:  # 아이가 직접 쓰는 칸
-        st.session_state[f"story_{i}"] = st.text_area(
-            f"{title} 내용을 적어보세요",
-            value=st.session_state[f"story_{i}"],
-            height=90,
-            key=f"story_input_{i}"
-        )
+
+    else:  # 아이 입력 칸
+        if not st.session_state[f"locked_{i}"]:
+            text_value = st.text_area(
+                f"{title} 내용을 적어보세요",
+                value=st.session_state[f"story_{i}"],
+                height=90,
+                key=f"story_input_{i}"
+            )
+            cols = st.columns(2)
+            if cols[0].button(f"{title} 완성 ✅", key=f"finish_btn_{i}", use_container_width=True):
+                if text_value.strip():
+                    st.session_state[f"story_{i}"] = text_value.strip()
+                    st.session_state[f"locked_{i}"] = True
+                    st.success(f"'{title}' 이야기가 완성되었어요! 🎉")
+                else:
+                    st.warning("내용을 입력한 뒤 완성 버튼을 눌러주세요.")
+        else:
+            st.info(f"'{title}' 이야기가 완성되었어요 ✅")
+            st.write(st.session_state[f"story_{i}"])
+            if st.button(f"{title} 수정하기 🔄", key=f"edit_btn_{i}", use_container_width=True):
+                st.session_state[f"locked_{i}"] = False
+                st.info(f"'{title}' 이야기를 다시 수정할 수 있어요.")
 
 # ---------------------------------------
 # 완성된 이야기
