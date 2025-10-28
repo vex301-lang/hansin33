@@ -99,19 +99,14 @@ if st.session_state["character_desc"]:
     def generate_auto(title_prefix, idx):
         character = st.session_state["character_desc"]
         prev_all = build_prev_context(idx)
-        prompt = (
-            f"첫 문장은 반드시 '{title_prefix}'로 시작하고, "
-            "초등학교 3학년이 이해하기 쉬운 따뜻한 문체로 "
-            "200~300자 분량의 문단을 작성해 주세요. "
-            "주인공 정보와 지금까지의 이야기를 자연스럽게 이어 주세요.
+prompt = (
+    f"첫 문장은 반드시 '{title_prefix}'로 시작하고, "
+    "초등학교 3학년이 이해하기 쉬운 따뜻한 문체로 "
+    "200~300자 분량의 문단을 작성해 주세요. "
+    "주인공 정보와 지금까지의 이야기를 자연스럽게 이어 주세요.\n\n"
+    f"주인공 정보:\n{character}\n\n지금까지의 이야기:\n{prev_all}"
+)
 
-"
-            f"주인공 정보:
-{character}
-
-지금까지의 이야기:
-{prev_all}"
-        )
         try:
             resp = client.responses.create(model="gpt-4o-mini", input=prompt, max_output_tokens=600)
             text = getattr(resp, "output_text", "").strip() or (
