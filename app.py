@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-한신 초등 이야기 메이커 (OpenAI 전용, 오류 및 들여쓰기 정리 버전)
+한신 초등 이야기 메이커 (OpenAI 전용, 자동 표시 최종 버전)
 """
 import os
 import re
@@ -93,6 +93,7 @@ if st.button("주인공 만들기 👤✨", use_container_width=True):
             if desc:
                 st.session_state["character_desc"] = desc
                 st.success("💫 주인공이 완성되었어요!")
+                st.rerun()
             else:
                 st.warning("응답은 성공했지만 내용이 비어 있어요. 잠시 후 다시 시도해 주세요.")
         except Exception as e:
@@ -128,7 +129,7 @@ if st.session_state["character_desc"]:
             [st.session_state[f"story_{j}"] for j in range(idx) if st.session_state[f"story_{j}"]]
         ).strip()
 
-    # 자동 생성 함수
+    # 자동 생성 함수 (수정된 버전: 생성 후 바로 표시)
     def generate_auto(title_prefix, idx):
         character = st.session_state["character_desc"]
         prev_all = build_prev_context(idx)
@@ -152,6 +153,7 @@ if st.session_state["character_desc"]:
                 text = f"{title_prefix} " + text
             st.session_state[f"story_{idx}"] = text
             st.success(f"✨ '{title_prefix}' 이야기 자동 생성 완료!")
+            st.rerun()  # ✅ 새로고침으로 바로 표시
         except Exception as e:
             st.error(f"자동 생성 중 오류 발생: {e}")
 
