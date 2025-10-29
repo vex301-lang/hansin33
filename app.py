@@ -227,6 +227,6 @@ if any(st.session_state[f"story_{i}"].strip() for i in range(8)):
     st.markdown("---")
     if st.button("🏠 이야기로 돌아가기", use_container_width=True):
         st.markdown(
-            "<meta http-equiv='refresh' content='0; url=https://hansin3.my.canva.site/'>",
+            "<meta http-equiv='refresh' content='0; url=https://www.canva.com/design/DAG3IJOfuN4/8BGAADdvXv2CUqFt2Jrqvg/edit?utm_content=DAG3IJOfuN4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton'>",
             unsafe_allow_html=True
         )
