@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 한신 초등 이야기 메이커 (AI와 아이가 번갈아 쓰는 단계별 버전)
-- AI는 1, 3, 5번째 칸만 작성
-- 각 칸은 3~5문장 제한
-- 다음 접속사를 고려하여 자연스럽게 이어짐
-- '옛날에' 단락은 고전적 서두(OO이 살았어요) 형태로 시작
-- 아이 입력 칸에는 '완성' 및 '수정하기' 버튼 추가
+- 반 + 모둠 입력
+- AI는 1,3,5번째 칸 자동 생성
+- 각 단락 3~5문장 제한
+- 다음 접속사 고려 + '옛날에' 서두 보정
+- 아이는 각 칸 완성/수정 가능
+- 완성 후 '이야기 복사' 및 '이야기로 돌아가기' 버튼 추가
 """
 import os
 import re
@@ -37,10 +38,9 @@ client = OpenAI(api_key=OPENAI_KEY)
 # 학생 정보
 # ---------------------------------------
 st.subheader("👧 학생 정보 입력")
-c1, c2, c3 = st.columns(3)
-cls = c1.text_input("학급 (예: 3-2)")
-num = c2.text_input("번호")
-name = c3.text_input("이름")
+c1, c2 = st.columns(2)
+cls = c1.text_input("반 (예: 3-2)")
+team = c2.text_input("모둠 (예: 1모둠)")
 
 # ---------------------------------------
 # 금칙어 필터
@@ -151,17 +151,15 @@ def generate_step_story(title, idx):
             resp = client.responses.create(model="gpt-4o-mini", input=prompt, max_output_tokens=400)
         text = getattr(resp, "output_text", "").strip() or resp.output[0].content[0].text.strip()
 
-        # 메타 문장 제거
         for bad_phrase in ["다음 이야기", "결말", "궁금", "예고", "계속", "이어질"]:
             text = re.sub(bad_phrase + r".*?$", "", text)
 
         if not text.startswith(title):
             text = f"{title} " + text
 
-        # 옛날에 단락 보정: 주어 빠짐 방지
         if title == "옛날에":
             if not re.search(r"옛날에\s+\S+(은|는|이|가)\s", text):
-                subj = (name or "주인공").strip()
+                subj = "주인공"
                 text = re.sub(r"^옛날에[,\s]*", f"옛날에 {subj}은 ", text)
 
         st.session_state[f"story_{idx}"] = text.strip()
@@ -180,7 +178,6 @@ for i, title in enumerate(TITLES):
         if st.session_state[f"story_{i}"]:
             st.markdown(f"🪄 **{title} 장면**")
             st.write(st.session_state[f"story_{i}"])
-
     else:  # 아이 입력 칸
         if not st.session_state[f"locked_{i}"]:
             text_value = st.text_area(
@@ -216,5 +213,20 @@ if any(st.session_state[f"story_{i}"].strip() for i in range(8)):
         if st.session_state[f"story_{i}"].strip()
     )
     st.write(story_text)
-    filename = f"{cls}_{num}_{name}_story.txt".replace(" ", "_") or "my_story.txt"
-    st.download_button("📥 이야기 저장하기 (txt)", data=story_text, file_name=filename, mime="text/plain")
+
+    colA, colB = st.columns(2)
+    filename = f"{cls}_{team}_story.txt".replace(" ", "_") or "my_story.txt"
+    colA.download_button("📥 이야기 저장하기 (txt)", data=story_text, file_name=filename, mime="text/plain")
+
+    # 복사 버튼
+    if colB.button("📋 이야기 복사하기", use_container_width=True):
+        st.session_state["copy_text"] = story_text
+        st.code(st.session_state["copy_text"], language="text")
+        st.success("이야기가 복사되었습니다! (Ctrl+C 또는 Cmd+C로 복사하세요)")
+
+    st.markdown("---")
+    if st.button("🏠 이야기로 돌아가기", use_container_width=True):
+        st.markdown(
+            "<meta http-equiv='refresh' content='0; url=https://hansin3.my.canva.site/'>",
+            unsafe_allow_html=True
+        )
