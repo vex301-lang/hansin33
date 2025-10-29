@@ -225,8 +225,17 @@ if any(st.session_state[f"story_{i}"].strip() for i in range(8)):
         st.success("이야기가 복사되었습니다! (Ctrl+C 또는 Cmd+C로 복사하세요)")
 
     st.markdown("---")
-    if st.button("🏠 이야기로 돌아가기", use_container_width=True):
-        st.markdown(
-            "<meta http-equiv='refresh' content='0; url=https://www.canva.com/design/DAG3IJOfuN4/8BGAADdvXv2CUqFt2Jrqvg/edit?utm_content=DAG3IJOfuN4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton'>",
-            unsafe_allow_html=True
-        )
+    # 링크 버튼들
+    link_col1, link_col2 = st.columns(2)
+    link_col1.markdown(
+        "<a href='https://www.canva.com/design/DAG3IJOfuN4/8BGAADdvXv2CUqFt2Jrqvg/edit?utm_content=DAG3IJOfuN4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton' target='_blank' "
+        "style='text-decoration:none; background-color:#4CAF50; color:white; "
+        "padding:10px 20px; border-radius:8px; display:inline-block;'>🏠 이야기로 돌아가기</a>",
+        unsafe_allow_html=True
+    )
+    link_col2.markdown(
+        "<a href='#' onclick='navigator.clipboard.writeText(document.body.innerText);' "
+        "style='text-decoration:none; background-color:#2196F3; color:white; "
+        "padding:10px 20px; border-radius:8px; display:inline-block;'>📋 이야기 복사하기</a>",
+        unsafe_allow_html=True
+    )
